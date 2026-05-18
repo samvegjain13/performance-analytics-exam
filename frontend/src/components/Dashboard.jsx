@@ -125,9 +125,26 @@ const Dashboard = () => {
                 <div className="employee-stats">
                   <div className="stat-item">
                     <span className="stat-label">Performance</span>
-                    <span className={`stat-value ${emp.performanceScore >= 80 ? 'score-high' : emp.performanceScore >= 60 ? 'score-med' : 'score-low'}`}>
-                      {emp.performanceScore}/100
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span className={`stat-value ${emp.performanceScore >= 80 ? 'score-high' : emp.performanceScore >= 60 ? 'score-med' : 'score-low'}`}>
+                        {emp.performanceScore}/100
+                      </span>
+                      <button 
+                        className="btn btn-secondary" 
+                        style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const newScore = prompt('Enter new performance score (0-100):', emp.performanceScore);
+                          if (newScore !== null && newScore !== '' && !isNaN(newScore)) {
+                            api.put(`/employees/${emp._id}/performance`, { performanceScore: Number(newScore) })
+                              .then(() => fetchEmployees())
+                              .catch(err => alert('Failed to update score: ' + err.response?.data?.message));
+                          }
+                        }}
+                      >
+                        Update
+                      </button>
+                    </div>
                   </div>
                   <div className="stat-item">
                     <span className="stat-label">Experience</span>

@@ -41,12 +41,12 @@ exports.getAIRecommendation = async (req, res) => {
     }
 
     const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
-      model: "google/gemini-2.5-flash", // standard fast model
+      model: "google/gemini-2.5-flash",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt }
       ],
-      response_format: { type: "json_object" }
+      max_tokens: 1500
     }, {
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -56,11 +56,24 @@ exports.getAIRecommendation = async (req, res) => {
 
     let aiContent = response.data.choices[0].message.content;
     
+    // Extract JSON from markdown if necessary
+    const jsonMatch = aiContent.match(/```json\n([\s\S]*?)\n```/);
+    if (jsonMatch) {
+      aiContent = jsonMatch[1];
+    } else {
+      // In case it's just wrapped in braces
+      const braceMatch = aiContent.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+      if (braceMatch) {
+        aiContent = braceMatch[0];
+      }
+    }
+
     // Parse json just to ensure it's valid, and return to frontend
     try {
       const parsedContent = JSON.parse(aiContent);
       res.status(200).json(parsedContent);
     } catch (e) {
+      console.error("JSON Parsing failed. Raw content:", aiContent);
       res.status(200).json({ rawText: aiContent });
     }
 

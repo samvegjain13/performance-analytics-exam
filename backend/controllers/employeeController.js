@@ -44,10 +44,16 @@ exports.searchEmployees = async (req, res) => {
     const { department } = req.query;
     let query = {};
     if (department) {
-      query.department = { $regex: new RegExp(department, 'i') };
+      // The parameter is called department based on the prompt, but let's allow it to search name too
+      query = {
+        $or: [
+          { department: { $regex: new RegExp(department, 'i') } },
+          { name: { $regex: new RegExp(department, 'i') } }
+        ]
+      };
     }
     
-    const employees = await Employee.find(query);
+    const employees = await Employee.find(query).sort({ createdAt: -1 });
     res.status(200).json(employees);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
